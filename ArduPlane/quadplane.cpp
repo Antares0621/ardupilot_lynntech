@@ -1,4 +1,5 @@
 #include "Plane.h"
+#include "tiltrotor.h"
 
 #if HAL_QUADPLANE_ENABLED
 
@@ -820,8 +821,9 @@ bool QuadPlane::setup(void)
 
     // setup the trim of any motors used by AP_Motors so I/O board
     // failsafe will disable motors
-    uint32_t mask = plane.quadplane.motors->get_motor_mask();
-    hal.rcout->set_failsafe_pwm(mask, plane.quadplane.motors->get_pwm_output_min());
+    // lynntech modification
+    // uint32_t mask = plane.quadplane.motors->get_motor_mask();
+    // hal.rcout->set_failsafe_pwm(mask, plane.quadplane.motors->get_pwm_output_min());
 
     // default QAssist state as set with Q_OPTIONS
     if (option_is_set(QuadPlane::OPTION::Q_ASSIST_FORCE_ENABLE)) {
@@ -841,18 +843,18 @@ bool QuadPlane::setup(void)
     tailsitter.setup();
 
     tiltrotor.setup();
-
-    if (!transition) {
-        transition = new SLT_Transition(*this, motors);
-    }
-    if (!transition) {
-        AP_BoardConfig::allocation_error("transition");
-    }
+	// lynntech modification
+    // if (!transition) {
+    //     transition = new SLT_Transition(*this, motors);
+    // }
+    // if (!transition) {
+    //     AP_BoardConfig::allocation_error("transition");
+    // }
 
     // init wp_nav variables after detaults are setup
     wp_nav->wp_and_spline_init();
 
-    transition->force_transition_complete();
+    // transition->force_transition_complete();
 
     // param count will have changed
     AP_Param::invalidate_count();

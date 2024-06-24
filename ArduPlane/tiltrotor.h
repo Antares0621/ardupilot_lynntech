@@ -16,6 +16,16 @@
 
 #include <AP_Param/AP_Param.h>
 #include "transition.h"
+#include <unistd.h>
+#include <SRV_Channel/SRV_Channel.h>
+#include <AP_Relay/AP_Relay.h>
+#include "AP_HAL/AP_HAL.h"
+
+
+/*This value represents 90 degrees and is the true
+  representation of servo max travel as opposed to SERVO_MAX
+  which is used throughout the codebase*/
+#define REAL_SERVO_MAX 9000.0   
 
 class QuadPlane;
 class AP_MotorsMulticopter;
@@ -39,7 +49,19 @@ public:
     void continuous_update();
     void binary_update();
     void vectoring();
-    void bicopter_output();
+    void update_transition_tracker(); // modified
+    void mySleep(int milliseconds); // modified
+    float get_tilt_percent_error(float target_val, float current_val); // modified
+    float map_real_servo_angle_range_to_servomax_angle_range(float desired_angle_cd); // modified
+    float map_servomax_angle_range_to_real_servo_angle_range(float desired_angle_cd); // modified
+    float map_servomax_angle_range_to_bicopter_normalised_angle_range(float desired_angle_cd); // modified
+    float map_bicopter_normalised_angle_range_to_servomax_angle_range(float desired_tilt); // modified
+    float map_bicopter_normalised_angle_range_to_codebase_normalised_angle_range(float desired_value); // modified
+    float map_normalised_pwm_input_to_forward_flight_tilt_angle_range(float desired_tilt); // modified
+    float map_arspd_input_to_vtol_tilt_angle_range(); // modified
+    void update_receive(); // modified
+    void request_datastream(); //modified
+    void bicopter_output(); 
     void tilt_compensate_angle(float *thrust, uint8_t num_motors, float non_tilted_mul, float tilted_mul);
     void tilt_compensate(float *thrust, uint8_t num_motors);
     bool tilt_over_max_angle(void) const;
@@ -79,7 +101,27 @@ public:
     AP_Float fixed_angle;
     AP_Float fixed_gain;
     AP_Float flap_angle_deg;
+    AP_Float vtol_angle_deg; // modified
+    AP_Float forward_flight_angle_deg; // modified
+    AP_Float perc_error_tolerated_for_tilt; // modified
+    AP_Float forward_flight_tilt_range_deg; // modified
+    AP_Float forward_flight_tilt_rate_dps; // modified
+    AP_Float arspd_noise_threshold_mps; // modified
 
+    int transition_start_time; // modified
+    int counter_for_transition_period_loop=0; // modified
+    int transition_tracker=0; //modified
+    float forward_flight_tilt=10000; // modified
+    bool is_transition_done=false; // modified
+    float transition_perc_err=10000; // modified
+    float servo_tilt_angle_range; // max angle that servos can tilt from trim // modified
+    float codebase_current_tilt=10000; // current tilt normalised between -1 and 1 // modified
+    int vtol_mode_tilt_tracker=0; // modified
+    float vtol_mode_tilt_start_time; //modified
+    float vtol_flight_tilt; //modified
+    float actual_forward_flight_angle_achieved_cd; // actual forward flight angle achieved after transition // modified
+    float ff_tilt_upper_bound_cd; // forward flight upper tilt limit // modified
+    float ff_tilt_lower_bound_cd; // forward flight lower tilt limit // modified
     float current_tilt;
     float current_throttle;
     bool _motors_active:1;
